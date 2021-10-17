@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+
+<link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet'>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>egg</title>
+</head>
+<body>
+
+  <link rel="stylesheet" type="text/css" href="{% static 'index.css' %}">
+<header>
+    <div class="header">
+    {% for word in header %}
+    <div class="header-link-div"><a href={{word.url}} class='header-link'>{{word.name}}</a></div>
+    {%endfor%}
+  </div>
+  </header>
+  <div class="auth-form-container">
+    <form action="/signUp/?redirect_to={{redirect}}" method="post">
+      {% csrf_token %}
+      <input type="text" class='sign-in-text sign-in' placeholder="username" name='username'>
+      <input type="email" class='sign-in-text sign-in' placeholder="email" name='email'>
+      <input type="password" class='sign-in-text sign-in' placeholder="password" name='password'>
+      <input type="submit" class="button sign-in-button sign-in" value="Sign Up!">
+</form>
+  </div>
+  <div class="footer">
+    dedicated to graph eggs
+  </div>
+</body>
+</html>
