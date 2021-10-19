@@ -1,6 +1,7 @@
 import time
 import django
 import json
+import math
 
 
 
@@ -15,7 +16,7 @@ from .models import Planets,Player
 
 
 
-
+QUADRANT = 5
 NUM_TREES = 100
 WORLD_RANGE = 100 #EXTREMELY CAREFUL WITH THIS. For the planets. 
 X_RANGE_SPACE = 100000#for the void
@@ -37,13 +38,23 @@ def make_string():
 class planet_class:
   def __init__(self):
     if Planets.objects.count() == 0:
-        self.planet_making()
+      self.planet_making()
+    self.player_coords_planet = []
+    self.player_coords_space=[]
 
 
   
   def add_to_planets(self,name, coordinates, landscape_arr, collision_arr):
     p=Planets(planet_name=name, planet_coordinates=json.dumps(coordinates),planet_chat=json.dumps([]),planet_landscape=json.dumps(landscape_arr),planet_players=json.dumps([]),planet_collisions=json.dumps(collision_arr),planet_owner="None",taxation=".25",description="")
     p.save()
+
+
+
+  def get_planet_from_coords(self,x,y):
+    for i in Planets.objects.all().iterator():
+      if (json.loads(i.planet_coordinates)[0]==x) and (json.loads(i.planet_coordinates)[1]==y):
+        return i.planet_name
+    return False
 
 
 
@@ -66,6 +77,8 @@ class planet_class:
       planets.append(json.loads(i.planet_coordinates))
     return planets
 
+
+
   def get_space_people(self,username):
     players_in_space = []
     s=json.loads(Player.objects.get(username=username).space)
@@ -79,13 +92,20 @@ class planet_class:
   def new_player(self,name,username):
     obj = {"username":username,
     "quadrant":Player.objects.get(username=username).quadrant,
-    "time":time.time(),"coordinates":[500,500]}
+    "time":time.time(),"coordinates":[500,500],"planet":name}
     p=Player.objects.get(username=username)
     p.planet = name
     p.save()
     self.edit_player_info(username,name,"none",[500,500],"none")
+    reg = True
+    for i in self.player_coords_planet:
+      if i["username"] == username:
+        reg = False
+    if reg == True:
+      self.player_coords_planet.append(obj)
     p=Planets.objects.get(planet_name=name)
     arr = json.loads(p.planet_players)
+    print(self.player_coords_planet)
     arr.append(obj)
     p.planet_players = json.dumps(arr)
     p.save()
@@ -99,16 +119,48 @@ class planet_class:
     player_obj = Player.objects.get(username=username)
     planet_obj = Planets.objects.get(planet_name=name)
     if quadrant != "none":
-      arr_players = json.loads(planet_obj.planet_players)
+      arr_players = self.player_coords_planet
       for v,i in enumerate(arr_players):
         if i["username"] == username:
           arr_players[v]['time'] = time.time()
           arr_players[v]['quadrant'] = quadrant
       player_obj.quadrant=json.dumps(quadrant)
-      planet_obj.planet_players = json.dumps(arr_players)
+      self.player_coords_planet = arr_players
       player_obj.save()
       planet_obj.save()
     if game_coords != "none":
+      arr_players = self.player_coords_planet
+      for v,i in enumerate(arr_players):
+        if i["username"] == username:
+          arr_players[v]['time'] = time.time()
+          arr_players[v]['coordinates'] = game_coords
+      self.player_coords_planet = arr_players
+      planet_obj.save()
+    if online != "none":
+      player_obj = Player.objects.get(username=username)
+      player_obj.online = online
+      player_obj.save()
+
+
+
+  def get_first_planet(self):
+    for i in Planets.objects.all().iterator():
+      return i.planet_name
+
+
+
+  def remove_player_from_planet(self,username,name):
+    """
+    none for any of them indicates no change and if it is other than none, a change is made.
+    """
+    planet_obj = Planets.objects.get(planet_name=name)
+    arr_players = self.player_coords_planet
+    for v,i in enumerate(arr_players):
+      if i["username"] == username:
+        arr_players.pop(v)
+    self.player_coords_planet = arr_players
+    planet_obj.save()
+    """if game_coords != "none":
       arr_players = json.loads(planet_obj.planet_players)
       for v,i in enumerate(arr_players):
         if i["username"] == username:
@@ -119,12 +171,12 @@ class planet_class:
     if online != "none":
       player_obj = Player.objects.get(username=username)
       player_obj.online = online
-      player_obj.save()
+      player_obj.save()"""
 
 
 
-  def get_quadrant_players(self,name,x,y):
-    player_data = json.loads(Planets.objects.get(planet_name=name).planet_players)
+  def get_quadrant_players(self,name,x,y,username):
+    player_data = self.player_coords_planet
     player_return = []
     for v,i in enumerate(player_data):
       if (time.time()-int(i["time"]))>20:
@@ -132,11 +184,14 @@ class planet_class:
         s=Player.objects.get(username=i['username'])
         s.online = "false"
         s.save()
-      if i["quadrant"] == [x,y]:
-        player_return.append(i["username"],i["coordinates"])
-    p=Planets.objects.get(planet_name=name)
-    p.planet_players = json.dumps(player_data)
-    p.save()
+      try:
+        if (json.loads(i["quadrant"]) == [x,y]) and (i["planet"]==name) and (i["username"]!=username):
+          player_return.append([i["username"],i["coordinates"]])
+      except:
+        if (i["quadrant"] == [x,y]) and (i["planet"]==name) and (i["username"]!=username):
+          player_return.append([i["username"],i["coordinates"]])
+        
+    self.player_coords_planet = player_data
     return player_return
 
   
@@ -153,19 +208,22 @@ class planet_class:
 
 
   def edit_quadrant(self,name,X1,Y1,x2,y2,num):
-    x_coord = X1*10+x2
-    y_coord = Y1*10+y2
+    x_coord = int(X1)*QUADRANT+int(x2)
+    y_coord = int(Y1)*QUADRANT+int(y2)
+    print(x_coord)
+    print(x_coord)
     arr = json.loads(Planets.objects.get(planet_name=name).planet_landscape)
     arr[y_coord][x_coord] = num
     p=Planets.objects.get(planet_name=name)
     p.planet_landscape = json.dumps(arr)
     p.save()
+    print("saved")
 
 
 
   def add_collision(self,name,X1,Y1,x2,y2,size):
-    x_coord = X1*10+x2
-    y_coord = Y1*10+y2
+    x_coord = X1*QUADRANT+round(x2/200)
+    y_coord = Y1*QUADRANT+round(y2/200)
     arr = json.loads(Planets.objects.get(planet_name=name).planet_collisions)
     arr.append([x_coord,y_coord,size])
     p=Planets.objects.get(planet_name=name)
@@ -175,8 +233,8 @@ class planet_class:
 
 
   def delete_collision(self,name,X1,Y1,x2,y2):
-    x_coord = X1*10+x2
-    y_coord = Y1*10+y2
+    x_coord = X1*QUADRANT+x2
+    y_coord = Y1*QUADRANT+y2
     arr = json.loads(Planets.objects.get(planet_name=name).planet_collisions)
     for v,i in enumerate(arr):
       if (i[0] == x_coord) and (i[1]==y_coord):
@@ -192,12 +250,12 @@ class planet_class:
     collision_arr = json.loads(Planets.objects.get(planet_name=name).planet_collisions)
     collision_return = []
     for i in collision_arr:
-      if (i[0]>=(x*10)) and (i[0]<=((x+1)*10)):
-        if (i[1]>=(y*10)) and (i[1]<=((y+1)*10)):
-          collision_return.append(i)
+      if (i[0]>=(x*QUADRANT)) and (i[0]<=((x+1)*QUADRANT)):
+        if (i[1]>=(y*QUADRANT)) and (i[1]<=((y+1)*QUADRANT)):
+          collision_return.append([i[0]-x*QUADRANT,i[1]-y*QUADRANT,i[2]])
     landscape_return = []
-    for i in range(y,(y+11)):
-      landscape_return.append(landscape_arr[x:x+10])
+    for i in range(y*QUADRANT,(y*QUADRANT+QUADRANT)):
+      landscape_return.append(landscape_arr[i][x*QUADRANT:x*QUADRANT+QUADRANT])
     return [landscape_return,collision_return]
 
 
