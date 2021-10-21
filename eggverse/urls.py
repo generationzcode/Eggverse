@@ -15,8 +15,11 @@ urlpatterns = [
     path('change_quadrant', views.change_quadrant, name="change_quadrant"),
     path('enter_planet', views.enter_planet, name="enter_planet"),
     path('handle_death', views.handle_death, name="handle_death"),
-    path('space_game_loop', views.change_quadrant, name="space_game_loop"),
+    path('space_game_loop', views.space_game_loop, name="space_game_loop"),
     path('enter_space', views.enter_space, name="enter_space"),
     path('planet_player', views.planet_player, name="planet_player"),
+    path('get_chat', views.planet_chat_get, name="chat_get"),
+    path('make_chat', views.planet_chat_make, name="chat_make"),
+    path('space_player', views.space_player, name="space_player"),
 ]
 

@@ -130,8 +130,17 @@ def joined_game(request):
 
 def planet_chat_make(request):
   username = json.loads(request.body.decode("utf-8"))["username"]
-  message = json.loads(json.loads(request.body.decode("utf-8"))['coordinates'])
+  message = json.loads(request.body.decode("utf-8"))['message']
+  name = Player.objects.get(username=username).planet
+  planet_instance.add_chat(name,username,message)
+  return HttpResponse("The eggs know of your presence and will hunt you along with the carrots! the great salad war has ended but we still want ALL carrots to die!!!!")
 
+
+
+def planet_chat_get(request):
+  username = json.loads(request.body.decode("utf-8"))["username"]
+  name = Player.objects.get(username=username).planet
+  return HttpResponse(json.dumps(planet_instance.get_chat(name)))
 
 
 
@@ -146,13 +155,20 @@ def planet_game_loop(request):
   player_planet = Player.objects.get(username=username).planet
   if landscape_edit != []:
     planet_instance.edit_quadrant(player_planet,player_quadrant[0],player_quadrant[1],landscape_edit[0],landscape_edit[1],landscape_edit[2])
+    p=Player.objects.get(username=username)
+    p.balance = str(int(p.balance)+50)
+    p.save()
   if collision_delete != []:
     planet_instance.delete_collision(player_planet,player_quadrant[0],player_quadrant[1], collision_delete[0], collision_delete[1])
   if collision_create != []:
-    planet_instance.add_collision(player_planet,player_quadrant[0],player_quadrant[1], collision_create[0], collision_create[1],collision_create[2])
+    p=Player.objects.get(username=username)
+    if int(p.balance)>0:
+      p.balance = str(int(p.balance)-50)
+      p.save()
+      planet_instance.add_collision(player_planet,player_quadrant[0],player_quadrant[1], collision_create[0], collision_create[1],collision_create[2])
   planet_instance.edit_player_info(username,player_planet,"none",coordinates,"none")
   user = Player.objects.get(username=username)
-  return HttpResponse(json.dumps([planet_instance.get_quadrant(user.planet,json.loads(user.quadrant)[0],json.loads(user.quadrant)[1]),planet_instance.get_quadrant_players(user.planet,json.loads(user.quadrant)[0],json.loads(user.quadrant)[1],username)]))
+  return HttpResponse(json.dumps([planet_instance.get_quadrant(user.planet,json.loads(user.quadrant)[0],json.loads(user.quadrant)[1]),planet_instance.get_quadrant_players(user.planet,json.loads(user.quadrant)[0],json.loads(user.quadrant)[1],username),user.quadrant,user.planet,user.balance]))
 
 
 
@@ -188,13 +204,66 @@ def change_quadrant(request):
 
 def handle_death(request):
   username = json.loads(request.body.decode("utf-8"))['username']
+  username_of_killer = json.loads(request.body.decode("utf-8"))['username_killer']
   planet = Player.objects.get(username=username).planet
   planet_instance.remove_player_from_planet(username,planet)
+  v = Player.objects.get(username=username_of_killer)
   p = Player.objects.get(username=username)
   p.planet = planet_instance.get_first_planet()
+  killer_planets = json.loads(v.owned_planets)
+  for i in json.loads(p.owned_planets):
+    killer_planets.append(i)
+    m = Planets.objects.get(planet_name=i)
+    m.planet_owner = username_of_killer
+  p.owned_planets="[]"
+  v.owned_planets = json.dumps(killer_planets)
+  killer_inventory = json.loads(v.inventory)
+  for i in json.loads(p.inventory):
+    killer_inventory.append(i)
+  p.inventory="[]"
+  v.inventory = json.dumps(killer_inventory)
   p.quadrant=json.dumps([1,1])
   p.save()
+  v.save()
+  return HttpResponse("literally stop")
 
+
+
+def handle_transaction(request):
+  try:
+    username = json.loads(request.body.decode("utf-8"))['username']
+    username_recipient = json.loads(request.body.decode("utf-8"))['username_recipient']
+    index_inventory = int(json.loads(request.body.decode("utf-8"))['index'])
+    v = Player.objects.get(username=username_recipient)
+    p = Player.objects.get(username=username)
+    recipient_inv = json.loads(v.inventory)
+    player_inv = json.loads(p.inventory)
+    recipient_inv.append(player_inv[index_inventory])
+    player_inv.pop(index_inventory)
+    v.inventory = json.dumps(recipient_inv)
+    p.inventory = json.dumps(player_inv)
+    p.save()
+    v.save()
+    return HttpResponse("true")
+  except:
+    return HttpResponse("false")
+
+
+
+def handle_money(request):
+  username = json.loads(request.body.decode("utf-8"))['username']
+  username_recipient = json.loads(request.body.decode("utf-8"))['username_recipient']
+  value_sent = int(json.loads(request.body.decode("utf-8"))['value'])
+  v = Player.objects.get(username=username_recipient)
+  p = Player.objects.get(username=username)
+  if int(p.balance)>=value_sent:
+    p.balance = str(int(p.balance)-value_sent)
+    v.balance = str(int(v.balance)+value_sent)
+    p.save()
+    v.save()
+    return HttpResponse("true")
+  else:
+    return HttpResponse("false")
 
 
 def space_game_loop(request):
@@ -208,7 +277,7 @@ def space_game_loop(request):
 def enter_space(request):
   username=json.loads(request.body.decode("utf-8"))['username']
   planet_instance.enter_space(username)
-  return HttpResponse(json.dumps(planet_instance.get_space_obj()))
+  return HttpResponse(json.dumps([planet_instance.get_space_obj(),planet_instance.get_own_coords_space(username)]))
     
 
 
@@ -229,4 +298,37 @@ def enter_planet(request):
   p = Player.objects.get(username=username)
   p.planet = name
   p.save()
+  if Planets.objects.get(planet_name=name).planet_owner == "None":
+    p=Planets.objects.get(planet_name=name)
+    p.planet_owner=username
+    p.save()
+  players_space = planet_instance.player_coords_space
+  for v,i in enumerate(players_space):
+    if i["username"] == username:
+      players_space.pop(v)
+  planet_instance.player_coords_space = players_space
   return HttpResponse("hi, stop hacking. STOP IT!")
+
+
+
+def space_player(request):
+  if request.user.is_authenticated:
+    username = request.user.username
+    return render(request,"space_player.html",{"username":username})
+  else:
+    return redirect("/")
+
+
+
+def player_list(request):
+  if request.user.is_authenticated:
+    username = request.user.username
+    return render(request,"player_list.html",{"username":username,"players":planet_instance.player_coords_planet})
+  else:
+    return redirect("/")
+
+
+
+def join_player(request):
+  username = json.loads(request.body.decode("utf-8"))['username']
+  username_player = json.loads(request.body.decode("utf-8"))['username_player']

@@ -22,14 +22,76 @@
     11 is neon orange
     """
   -->
+  <link rel="preload" href="https://Fonts.GoogleAPIs.com/css?family=Baloo" as="style">
+<link rel="stylesheet" href="https://Fonts.GoogleAPIs.com/css?family=Baloo">
+
   <button id="place_stone" onclick="on_click_stone()">place stone mode</button>
   <button id="place_collision" onclick="on_click_collision()">place collision mode</button>
   <button id="mine_mode" onclick="on_click_mine()">mine and pvp mode</button>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/p5.min.js"></script>
   <span id="username">{{username}}</span>
+  <span id="quadrant"></span>
+  <span id="balance"></span>
+  <span id="planet"></span>
+  <button onclick="leave_planet()">Leave planet!</button>
+  <textarea id="textbox"></textarea>
+  <button onclick="post_chat()">enter chat!</button>
+
+  <div id="chatbox"></div>
   <script>
     var WIDTH=150
     var HEIGHT=210
+    var block_height = []
+    for (let i=0;i<=5;i++){
+      block_height.push([])
+      for (let v=0;v<=5;v++){
+        block_height[i].push(Math.random()*50)
+      }
+    }
+    function post_chat(e){
+      var chat=document.getElementById("textbox").value
+      var opts = {
+        username:username,
+        message:chat,
+      }
+        fetch('/make_chat', {
+          method: 'POST',
+          headers: {
+  'Content-Type': 'application/json',
+  },
+          body: JSON.stringify(opts)
+        })
+        document.getElementById("textbox").value=""
+    }
+    function get_chat(){
+      var messages=[]
+      var opts = {
+        username:username,
+      }
+      fetch('/get_chat', {
+        method: 'POST',
+        headers: {
+'Content-Type': 'application/json',
+},
+        body: JSON.stringify(opts)
+      }).then(function(response) {
+      return response.text();
+    }).then(function(text){
+      messages=JSON.parse(text)
+          var html_val=""
+    for(i in messages){
+      html_val+= "<br>"+messages[i]
+    }
+      document.getElementById("chatbox").innerHTML=html_val
+      //console.log(collisions)
+    })
+
+    }
+    setInterval(get_chat,2000)
+    function leave_planet(e){
+      // Simulate an HTTP redirect:
+      window.location.replace("/space_player");
+    }
     function on_click_stone(e){
       place_stone_button=true
       place_collision_button=false
@@ -66,11 +128,16 @@
       blocks = JSON.parse(text)[0][0]
       collisions = JSON.parse(text)[0][1]
       players = JSON.parse(text)[1]
+      quadrant = JSON.parse(text)[2]
+      document.getElementById("quadrant").innerHTML="planet quadrant : "+quadrant
+      document.getElementById("planet").innerHTML="planet : "+JSON.parse(text)[3]
+      document.getElementById("balance").innerHTML="balance : "+JSON.parse(text)[4]
       //console.log(collisions)
     })
     landscape_edit=[]
     collision_edit=[]
     }
+    var quadrant=""
     var collisions_delete=[]
     var collisions=[]
     var xspeed=0
@@ -109,6 +176,7 @@
 
     function setup() {
       createCanvas(1000, 700,WEBGL);
+      textFont("baloo");
       ambientLight(255);
       textSize(20);
       for (let i=0; i<=10;i++){
@@ -150,12 +218,21 @@
     }
     var count=0
     var count2 = 0
+
+
+
+
+
+
+    //THIS PART TO BE CONVERTED TO THREEJS
+
+
     function draw() {
       if (pause==false){
         /*camera(500, -700 ,400,   // camera position (x, y, z)
          500   , 0,    350,   // camera target (look at position) (x, y, z)
          0   ,    1,    1);*/
-         camera(420, 700, 300, 420, 0,300, 0, 0, 1);
+         camera(410, 660, 360, 420, 0,300, 0, 0, 1);
 
         count=0
 
@@ -170,9 +247,10 @@
           //fill('rgba(0,0,255, 0.25)');
           fill(colours[blocks[v][i]-1])
           push()
-          //text(block_hp[v][i],(i)*200,(v)*140)
+          
+          //text(block_hp[v][i])
           translate(i*HEIGHT,0,v*WIDTH)
-          box(HEIGHT,-140,WIDTH)
+          box(HEIGHT,-140+block_height[v][i],WIDTH)
           pop()
           //image(colours[blocks[v][i]-1],(i)*200,(v)*140,200,140)
           
@@ -188,9 +266,8 @@
           x += x_vector
           y += y_vector
         }
-      //text("You",x-10,y-60)
       noStroke()
-      translate(collisions[i][0]*HEIGHT,40,collisions[i][1]*WIDTH)
+      translate(collisions[i][0]*HEIGHT,100,collisions[i][1]*WIDTH)
       sphere(collisions[i][2]+30);
       pop()
       }
@@ -199,7 +276,7 @@
         fill("rgba(255,0,0,1)")
       //text("You",x-10,y-60)
       noStroke()
-      translate(x-70,40,y-70)
+      translate(x-70,100,y-70)
       sphere(70);
       pop()
       }
@@ -208,23 +285,27 @@
       fill(130)
       //text("You",x-10,y-60)
       noStroke()
-      translate(x-70,40,y-70)
+      translate(x-70,100,y-70)
       sphere(70);
       pop()
       }
       else if (place_collision==true){
-        push()
       fill("blue")
-      //text("You",x-10,y-60)
       noStroke()
-      translate(x-70,40,y-70)
+      translate(x-70,100,y-70)
       sphere(70);
       pop()
       }
       for (i in players){
-        fill("white")
+        push()
+        fill("rgb(0,50,230)")
+      //text("You",x-10,y-60)
+      noStroke()
+      translate(players[i][1][0]-70,100,players[i][1][1]-70)
+      sphere(40);
+      pop()
         //text(players[i][0],players[i][1][0],players[i][1][1]-60)
-        ellipse(players[i][1][0],players[i][1][1],50,50)
+
       }
       x-=xspeed
       y+=yspeed
@@ -270,7 +351,7 @@
       fill(200)
       //text("You",x-10,y-60)
       noStroke()
-      translate(x-70,40,y-70)
+      translate(x-70,100,y-70)
       sphere(40);
       //stroke()
 
@@ -283,6 +364,12 @@
       }
     }
     }
+
+
+
+    //till here
+
+
 
     function keyPressed() {
 	switch(keyCode) {

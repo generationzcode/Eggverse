@@ -59,16 +59,23 @@ class planet_class:
 
 
   def move_in_space(self,username,coords):
-    p=Player.objects.get(username=username)
-    p.space = json.dumps(coords)
-    p.save()
-  
+    for v,i in enumerate(self.player_coords_space):
+      if i["username"] == username:
+        self.player_coords_space[v]={"username":username,"coordinates":json.loads(coords),"time":time.time()}
+      if (time.time()-i["time"])>20:
+        self.player_coords_space.pop(v)
+
 
 
   def enter_space(self,username):
     p=Player.objects.get(username=username)
-    p.space = json.dumps([Planets.objects.get(planet_name=p.planet).planet_coordinates[0]+300,Planets.objects.get(planet_name=p.planet).planet_coordinates[1]+300])
-
+    p.space = json.dumps([int(json.loads(Planets.objects.get(planet_name=p.planet).planet_coordinates)[0])+300,int(json.loads(Planets.objects.get(planet_name=p.planet).planet_coordinates)[1])+300])
+    existence = False
+    for v,i in enumerate(self.player_coords_space):
+      if i["username"] == username:
+        existence=True
+    if existence == False:
+      self.player_coords_space.append({"username":username,"coordinates":[int(json.loads(Planets.objects.get(planet_name=p.planet).planet_coordinates)[0])+300,int(json.loads(Planets.objects.get(planet_name=p.planet).planet_coordinates)[1])+300],"time":time.time()})  
   
 
   def get_space_obj(self):
@@ -76,16 +83,22 @@ class planet_class:
     for i in Planets.objects.all().iterator():
       planets.append(json.loads(i.planet_coordinates))
     return planets
+  
+
+
+  def get_own_coords_space(self,username):
+    for i in self.player_coords_space:
+      if i["username"] == username:
+        return i["coordinates"]
 
 
 
   def get_space_people(self,username):
-    players_in_space = []
-    s=json.loads(Player.objects.get(username=username).space)
-    p=Player.objects.filter(online="true")
-    for i in p.iterator():
-      players_in_space.append([i.username,[500+json.loads(i.space)[0]-s[0],500+json.loads(i.space)[1]-s[1]]])
-    return players_in_space
+    ret_coords = []
+    for i in self.player_coords_space:
+      if i["username"]!=username:
+        ret_coords.append(i)
+    return ret_coords
 
 
 
@@ -193,6 +206,11 @@ class planet_class:
         
     self.player_coords_planet = player_data
     return player_return
+
+
+
+  def get_chat(self,name):
+    return json.loads(Planets.objects.get(planet_name=name).planet_chat)
 
   
 

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/p5.min.js"></script>
+  <span id="username">{{username}}</span>
+  <script>
+    var x=0
+    var y=0
+    var xspeed=0
+    var yspeed=0
+    var players=[]
+    var username = document.getElementById("username").innerHTML
+    function get_space_data(){
+      var opts = {
+        username:username,
+        coordinates:JSON.stringify([x,y]),
+      }
+      fetch('/space_game_loop', {
+        method: 'POST',
+        headers: {
+'Content-Type': 'application/json',
+},
+        body: JSON.stringify(opts)
+      }).then(function(response) {
+      return response.text();
+    }).then(function(text){
+      players = JSON.parse(text)
+    })
+    }
+    var planets=[]
+    function setup(){
+      createCanvas(1000, 700);
+      opts={username: username}
+      fetch('/enter_space', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(opts)
+      }).then(function(response) {
+      return response.text();
+    }).then(function(text){
+      planets = JSON.parse(text)[0]
+      x = JSON.parse(text)[1][0]
+      y = JSON.parse(text)[1][1]
+      console.log(text)
+    })
+    setInterval(get_space_data,500)
+    }
+    var pause=false
+    function draw(){
+      if (pause==false){
+      background(30)
+      for (let i in players){
+        fill("blue")
+        triangle(players[i].coordinates[0]-x+500, players[i].coordinates[1]-y+350, players[i].coordinates[0]+20-x+500, players[i].coordinates[1]-y+350, players[i].coordinates[0]+10-x+500, players[i].coordinates[1]-20-y+350)
+      }
+      for (let i in planets){
+        fill("brown")
+        ellipse(planets[i][0]-x+500,planets[i][1]-y+350,150,150)
+      }
+      fill("white")
+      triangle(500, 350, 20+500, 350,10+500, 350-20)
+      //ellipse(0,0,1000,1000)
+      x+=xspeed
+      y+=yspeed
+      for (let i in planets){
+        if (Math.abs(dist(x,y,planets[i][0],planets[i][1]))<120){
+          var opts = {
+        username:username,
+        coordinates:JSON.stringify([planets[i][0],planets[i][1]]),
+      }
+      fetch('/enter_planet', {
+        method: 'POST',
+        headers: {
+'Content-Type': 'application/json',
+},
+        body: JSON.stringify(opts)
+      })
+      pause=true
+      // Simulate an HTTP redirect:
+      window.location.replace("/planet_player");
+        }
+      }
+      }
+    }
+     function keyPressed() {
+	switch(keyCode) {
+		case 37:
+		case 65:
+			xspeed = -2;
+			break;
+		case 39:
+		case 68:
+			xspeed = 2;
+			break;
+		case 38:
+		case 87:
+			yspeed = -2;
+			break;
+		case 40:
+		case 83:
+			yspeed = 2;
+			break;
+	}
+}
+
+function keyReleased() {
+	switch(keyCode) {
+		case 37:
+		case 65:
+			xspeed = 0;
+			break;
+		case 39:
+		case 68:
+			xspeed = 0;
+			break;
+		case 38:
+		case 87:
+			yspeed = 0;
+			break;
+		case 40:
+		case 83:
+			yspeed = 0;
+			break;
+	}
+}
+
+  </script>
+</body>
+</html>
