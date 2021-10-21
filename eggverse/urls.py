@@ -21,5 +21,9 @@ urlpatterns = [
     path('get_chat', views.planet_chat_get, name="chat_get"),
     path('make_chat', views.planet_chat_make, name="chat_make"),
     path('space_player', views.space_player, name="space_player"),
+    path('player_list', views.player_list, name="player_list"),
+    path('join_game', views.join_player, name="join_game"),
+    path('planet_list', views.planet_list, name="planet_list"),
+    path('join_planet', views.join_planet, name="join_planet"),
 ]
 

@@ -346,3 +346,10 @@ class planet_class:
     return [landscape,collision_arr]
 
 
+
+  def get_all_owned_planets(self):
+    return_planets=[]
+    for i in Planets.objects.all().iterator():
+      if i.planet_owner != "None":
+        return_planets.append([i.planet_name,i.planet_owner])
+    return return_planets

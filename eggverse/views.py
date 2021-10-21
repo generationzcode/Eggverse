@@ -332,3 +332,28 @@ def player_list(request):
 def join_player(request):
   username = json.loads(request.body.decode("utf-8"))['username']
   username_player = json.loads(request.body.decode("utf-8"))['username_player']
+  p = Player.objects.get(username=username)
+  v = Player.objects.get(username=username_player)
+  p.planet = v.planet
+  p.quadrant = v.quadrant
+  p.save()
+  return HttpResponse("epic")
+
+
+
+def planet_list(request):
+  if request.user.is_authenticated:
+    username = request.user.username
+    return render(request,"planet_list.html",{"username":username,"planets":planet_instance.get_all_owned_planets()})
+  else:
+    return redirect("/")
+
+
+
+def join_planet(request):
+  username = json.loads(request.body.decode("utf-8"))['username']
+  planet_name = json.loads(request.body.decode("utf-8"))['planet']
+  p = Player.objects.get(username=username)
+  p.planet = planet_name
+  p.save()
+  return HttpResponse("epic")
