@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
   {% load static %}
+      <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
 
-<link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet'>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>egg</title>
@@ -19,7 +22,7 @@
   </div>
   </header>
   <div class="auth-form-container">
-    <form action="/signUp/?redirect_to={{redirect}}" method="post">
+    <form action="/signUp/?redirect_to={{redirect}}" method="post" class="auth-form">
       {% csrf_token %}
       <input type="text" class='sign-in-text sign-in' placeholder="username" name='username'>
       <input type="email" class='sign-in-text sign-in' placeholder="email" name='email'>

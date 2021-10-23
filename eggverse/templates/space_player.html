@@ -1,11 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+      {% load static %}
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'index.css' %}">
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
+
 </head>
 <body>
+  <header>
+    <div class="header">
+    
+    <div class="header-link-div"><a href="/" class="header-link">home</a></div>
+    
+    <div class="header-link-div"><a href="/logout" class="header-link">sign out</a></div>
+    
+    <div class="header-link-div"><a href="/player_list" class="header-link">players</a></div>
+    
+    <div class="header-link-div"><a href="/planet_list" class="header-link">planets</a></div>
+    
+    <div class="header-link-div"><a href="/get_assets" class="header-link">assets</a></div>
+    
+  </div>
+  </header>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/p5.min.js"></script>
   <span id="username">{{username}}</span>
   <script>

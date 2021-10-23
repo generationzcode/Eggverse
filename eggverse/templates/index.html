@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+      {% load static %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <link rel="stylesheet" type="text/css" href="{% static 'index.css' %}">
+<header>
+    <div class="header">
+    {% for word in header %}
+    <div class="header-link-div"><a href={{word.url}} class='header-link'>{{word.name}}</a></div>
+    {%endfor%}
+  </div>
+  </header>
+    <div class="main_button"><a class="main_link" href="/planet_player">Play</a></div>
+  <script>
+  </script>
+</body>
+</html>

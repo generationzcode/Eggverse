@@ -1,11 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+      {% load static %}
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'index.css' %}">
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
 </head>
 <body>
+  <header>
+    <div class="header">
+    
+    <div class="header-link-div"><a href="/" class="header-link">home</a></div>
+    
+    <div class="header-link-div"><a href="/logout" class="header-link">sign out</a></div>
+    
+    <div class="header-link-div"><a href="/player_list" class="header-link">players</a></div>
+    
+    <div class="header-link-div"><a href="/planet_list" class="header-link">planets</a></div>
+    
+    <div class="header-link-div"><a href="/get_assets" class="header-link">assets</a></div>
+    
+  </div>
+  </header>
   <!--
 
     """
@@ -24,28 +45,43 @@
   -->
   <link rel="preload" href="https://Fonts.GoogleAPIs.com/css?family=Baloo" as="style">
 <link rel="stylesheet" href="https://Fonts.GoogleAPIs.com/css?family=Baloo">
-
-  <button id="place_stone" onclick="on_click_stone()">place stone mode</button>
-  <button id="place_collision" onclick="on_click_collision()">place collision mode</button>
-  <button id="mine_mode" onclick="on_click_mine()">mine and pvp mode</button>
+<div class="sidebar">
+<div class="buttons-player">
+  <button class="player-button" id="place_stone" onclick="on_click_stone()">place stone mode</button>
+  <button class="player-button" id="place_collision" onclick="on_click_collision()">place collision mode</button>
+  <button class="player-button" id="mine_mode" onclick="on_click_mine()">mine and pvp mode</button>
+  <button class="player-button" onclick="leave_planet()">Leave planet!</button>
+  </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/p5.min.js"></script>
-  <span id="username">{{username}}</span>
-  <span id="quadrant"></span>
-  <span id="balance"></span>
-  <span id="planet"></span>
-  <button onclick="leave_planet()">Leave planet!</button>
+  <div class="info-player">
+  <span class="player-button" id="username">User: {{username}}</span>
+  <span class="player-button" id="quadrant"></span>
+  <span class="player-button" id="balance"></span>
+  <span class="player-button" id="planet"></span>
+  </div>
+  <div class="chat-area">
   <textarea id="textbox"></textarea>
   <button onclick="post_chat()">enter chat!</button>
 
   <div id="chatbox"></div>
+  </div>
+  </div>
   <script>
     var WIDTH=150
     var HEIGHT=210
     var block_height = []
+    var block_injury=[]
+    var player_hp = []
     for (let i=0;i<=5;i++){
       block_height.push([])
       for (let v=0;v<=5;v++){
         block_height[i].push(Math.random()*50)
+      }
+    }
+    for (let i=0;i<=5;i++){
+      block_injury.push([])
+      for (let v=0;v<=5;v++){
+        block_injury[i].push(0)
       }
     }
     function post_chat(e){
@@ -92,6 +128,18 @@
       // Simulate an HTTP redirect:
       window.location.replace("/space_player");
     }
+    function die(name){
+      var opts = {
+        username:name,
+      }
+      fetch('/handle_death', {
+        method: 'POST',
+        headers: {
+'Content-Type': 'application/json',
+},
+        body: JSON.stringify(opts)
+      })
+    }
     function on_click_stone(e){
       place_stone_button=true
       place_collision_button=false
@@ -128,6 +176,12 @@
       blocks = JSON.parse(text)[0][0]
       collisions = JSON.parse(text)[0][1]
       players = JSON.parse(text)[1]
+      if (players.length != player_hp.length){
+      player_hp=[]
+      for (let i in players){
+        player_hp.push(100)
+      }
+      }
       quadrant = JSON.parse(text)[2]
       document.getElementById("quadrant").innerHTML="planet quadrant : "+quadrant
       document.getElementById("planet").innerHTML="planet : "+JSON.parse(text)[3]
@@ -146,7 +200,7 @@
     var y=500
     var players = []
     var username = document.getElementById("username").innerHTML
-    var colours = ["green","red","yellow","yellow","red","green","green","black","red","blue","yellow"]
+    var colours = ["#567d46","#d71536","#C2B280"," #d4af37","#D2D1CD","#10402e","#3A5F0B","#846870","#FF10F0","#4455ff","#FF6700"]
     var blocks=[]
 
 
@@ -173,7 +227,10 @@
     var landscape_edit=[]
     var collision_edit=[]
     var block_hp = []
-
+    function preload(){
+      img = loadImage('static/grass.jpg');
+      img.resize(5000,5000)
+    }
     function setup() {
       createCanvas(1000, 700,WEBGL);
       textFont("baloo");
@@ -185,7 +242,6 @@
         block_hp[i].push(100)
       }
     }
-      console.log(block_hp)
 
       grass = loadImage ('static/grass.png');
       red_grass = loadImage ('static/red_grass.png');
@@ -241,13 +297,15 @@
       
       for (let v in blocks){
         for (let i in blocks[v]){
-          ambientLight(100); // white light
-          ambientMaterial(255, 102, 94);
           stroke("black")
+          strokeWeight(2)
           //fill('rgba(0,0,255, 0.25)');
           fill(colours[blocks[v][i]-1])
           push()
-          
+          if (block_injury[v][i]>0){
+            fill("rgb("+str(255-(50-block_injury[v][i]*2))+",0,0)")
+            block_injury[v][i]-=1
+          }
           //text(block_hp[v][i])
           translate(i*HEIGHT,0,v*WIDTH)
           box(HEIGHT,-140+block_height[v][i],WIDTH)
@@ -358,7 +416,7 @@
     }
     else{
       count+=1
-      console.log("paused")
+      console.log("gameplay paused, landscape loading.")
       if (count >= 60){
         pause=false
       }
@@ -416,17 +474,13 @@ function keyReleased() {
 function mousePressed(){
   if (mine_mode_button==true){
     anger = true
-    console.log(y)
     for (let v in blocks){
       for (let i in blocks[v]){
         if ((((i*HEIGHT)-x+100)*((i*HEIGHT)-x+100)+((v*WIDTH)-y+70)*((v*WIDTH)-y+70)) < (50*50)){
           block_hp[v][i] -= 20
-          console.log(v)
-          console.log(i)
+          block_injury[v][i] = 20
+
           if (block_hp[v][i]<=0){
-            console.log(v)
-            console.log(i)
-            console.log("yo")
             block_hp[v][i]=100
             landscape_edit=[i,v,Math.floor(Math.random()*6+3)]
           }
@@ -436,6 +490,15 @@ function mousePressed(){
     for (let v in collisions){
       if ((((collisions[v][0]*HEIGHT)-x+100)*((collisions[v][0]*HEIGHT)-x+100)+((collisions[v][1]*WIDTH)-y+70)*((collisions[v][1]*WIDTH)-y+70)) < ((collisions[v][2]+20)*(collisions[v][2]+20))){
         collisions_delete = [collisions[v][0],collisions[v][1]]
+      }
+    }
+    for (let i in players){
+      //players[i][1][0]-70
+      if ((((players[i][1][0]-70)-x+100)*((players[i][1][0]-70)-x+100)+((players[i][1][1]-70)-y+70)*((players[i][1][1]-70)-y+70)) < ((100*100))){
+        player_hp[i] = player_hp[i]-20
+        if (player_hp <= 0){
+          die(players[i][0]);
+        }
       }
     }
   }
@@ -461,4 +524,5 @@ function mouseReleased(){
 }
   </script>
 </body>
+
 </html>

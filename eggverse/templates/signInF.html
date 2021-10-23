@@ -7,8 +7,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>egg</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
+
 </head>
 <body>
+
 
   <link rel="stylesheet" type="text/css" href="{% static 'index.css' %}">
 <header>
@@ -19,7 +24,7 @@
   </div>
   </header>
   <div class="auth-form-container">
-    <form action="/signIn/?redirect_to={{redirect}}" method="post">
+    <form action="/signIn/?redirect_to={{redirect}}" method="post" class="auth-form">
       {% csrf_token %}
       <input type="text" class='sign-in-text sign-in' placeholder="username" name='username'>
       <input type="password" class='sign-in-text sign-in' placeholder="password" name='password'>

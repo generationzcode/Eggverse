@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
     <link rel="stylesheet" type="text/css" href="{% static 'index.css' %}">
-   <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
 
@@ -28,32 +28,14 @@
     
   </div>
   </header>
-  <span id="username">{{username}}</span>
   <div class="list_container">
-  <h1 class="heading">Players online:</h1>
-  <ul>
-  {% for i in players %}
-  <li class="list_member"><form action="/player_view" method="POST"><input type="hidden" name="username_player" value="{{i.username}}"><input type="submit" value="{{i.username}}"></form> is online </li><button onclick="join_player('{{i.username}}')">join player!</button>
-  {% endfor %}
-  </ul>
-  <script>
-    var username=document.getElementById("username")
-    function join_player(user){
-      var opts={
-        username:username,
-        username_player:user
-      }
-      fetch('/join_game', {
-          method: 'POST',
-          headers: {
-  'Content-Type': 'application/json',
-  },
-          body: JSON.stringify(opts)
-        })
-              window.location.replace("/planet_player");
-
-    }
-  </script>
-  </div>
+  <h1>{{username_fetch}}</h1>
+  <h2>Your balance : {{balance}}</h2>
+  <h2>Pay user:</h2>
+<form action="/handle_money" method="post">
+<input type="hidden" name="username_recipient" value="{{username_fetch}}">
+<input type="number" name="value" id="" placeholder="amount to pay">
+<input type="submit" value="Pay!"></form>
+</div>
 </body>
 </html>

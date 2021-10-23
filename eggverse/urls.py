@@ -15,6 +15,7 @@ urlpatterns = [
     path('change_quadrant', views.change_quadrant, name="change_quadrant"),
     path('enter_planet', views.enter_planet, name="enter_planet"),
     path('handle_death', views.handle_death, name="handle_death"),
+    path('handle_money', views.handle_money, name="handle_money"),
     path('space_game_loop', views.space_game_loop, name="space_game_loop"),
     path('enter_space', views.enter_space, name="enter_space"),
     path('planet_player', views.planet_player, name="planet_player"),
@@ -25,5 +26,8 @@ urlpatterns = [
     path('join_game', views.join_player, name="join_game"),
     path('planet_list', views.planet_list, name="planet_list"),
     path('join_planet', views.join_planet, name="join_planet"),
+    path('get_assets', views.get_assets, name="get_assets"),
+    path('change_taxation', views.change_taxation, name="change_taxation"),
+    path('player_view', views.player_view, name="player_view"),
 ]
 

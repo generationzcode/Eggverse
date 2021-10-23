@@ -30,30 +30,16 @@
   </header>
   <span id="username">{{username}}</span>
   <div class="list_container">
-  <h1 class="heading">Players online:</h1>
+  <h1 class="title"> Planets owned: </h1>
   <ul>
-  {% for i in players %}
-  <li class="list_member"><form action="/player_view" method="POST"><input type="hidden" name="username_player" value="{{i.username}}"><input type="submit" value="{{i.username}}"></form> is online </li><button onclick="join_player('{{i.username}}')">join player!</button>
+  {% for i in planets %}
+  <li>Planet : {{i.0}}, taxation :  {{i.1}} </li><form method="POST" action="/change_taxation">
+  <input type="text" name="taxation" placeholder="taxation" value="{{i.1}}">
+<input type="hidden" name="planet" value="{{i.0}}">
+<input type="submit" value="Change taxes!">
+</form>
   {% endfor %}
   </ul>
-  <script>
-    var username=document.getElementById("username")
-    function join_player(user){
-      var opts={
-        username:username,
-        username_player:user
-      }
-      fetch('/join_game', {
-          method: 'POST',
-          headers: {
-  'Content-Type': 'application/json',
-  },
-          body: JSON.stringify(opts)
-        })
-              window.location.replace("/planet_player");
-
-    }
-  </script>
   </div>
 </body>
 </html>

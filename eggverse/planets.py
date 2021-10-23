@@ -353,3 +353,12 @@ class planet_class:
       if i.planet_owner != "None":
         return_planets.append([i.planet_name,i.planet_owner])
     return return_planets
+  
+
+
+  def get_owned_planets(self,username):
+    return_planets=[]
+    for i in Planets.objects.all().iterator():
+      if i.planet_owner == username:
+        return_planets.append([i.planet_name,i.taxation])
+    return return_planets
