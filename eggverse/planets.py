@@ -19,9 +19,9 @@ from .models import Planets,Player
 QUADRANT = 5
 NUM_TREES = 100
 WORLD_RANGE = 100 #EXTREMELY CAREFUL WITH THIS. For the planets. 
-X_RANGE_SPACE = 100000#for the void
-Y_RANGE_SPACE = 100000#for the void
-NUM_PLANETS = 100 #each planet takes 10,000 Bytes of data(and some more) so be careful...
+X_RANGE_SPACE = 300000#for the void
+Y_RANGE_SPACE = 300000#for the void
+NUM_PLANETS = 500  #each planet takes 10,000 Bytes of data(and some more) so be careful...
 
 
 
@@ -45,6 +45,7 @@ class planet_class:
 
   
   def add_to_planets(self,name, coordinates, landscape_arr, collision_arr):
+    print("building planet : "+name)
     p=Planets(planet_name=name, planet_coordinates=json.dumps(coordinates),planet_chat=json.dumps([]),planet_landscape=json.dumps(landscape_arr),planet_players=json.dumps([]),planet_collisions=json.dumps(collision_arr),planet_owner="None",taxation=".25",description="")
     p.save()
 
@@ -286,6 +287,11 @@ class planet_class:
       landscape_arr = landscape[0]
       collision_arr = landscape[1]
       self.add_to_planets(name,coords,landscape_arr,collision_arr)
+    for i in Player.objects.all().iterator():
+      p=Player.objects.get(username=i.username)
+      p.planet=self.get_first_planet()
+      p.owned_planets="[]"
+      p.save()
     return True
     
 

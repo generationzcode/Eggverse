@@ -40,7 +40,7 @@
     function get_space_data(){
       var opts = {
         username:username,
-        coordinates:JSON.stringify([x,y]),
+        coordinates:JSON.stringify([x*10,10*y]),
       }
       fetch('/space_game_loop', {
         method: 'POST',
@@ -68,8 +68,8 @@
       return response.text();
     }).then(function(text){
       planets = JSON.parse(text)[0]
-      x = JSON.parse(text)[1][0]
-      y = JSON.parse(text)[1][1]
+      x = JSON.parse(text)[1][0]/10
+      y = JSON.parse(text)[1][1]/10
       console.log(text)
     })
     setInterval(get_space_data,500)
@@ -80,11 +80,11 @@
       background(30)
       for (let i in players){
         fill("blue")
-        triangle(players[i].coordinates[0]-x+500, players[i].coordinates[1]-y+350, players[i].coordinates[0]+20-x+500, players[i].coordinates[1]-y+350, players[i].coordinates[0]+10-x+500, players[i].coordinates[1]-20-y+350)
+        triangle(players[i].coordinates[0]/10-x+500, players[i].coordinates[1]/10-y+350, players[i].coordinates[0]/10+20-x+500, players[i].coordinates[1]/10-y+350, players[i].coordinates[0]/10+10-x+500, players[i].coordinates[1]/10-20-y+350)
       }
       for (let i in planets){
         fill("brown")
-        ellipse(planets[i][0]-x+500,planets[i][1]-y+350,150,150)
+        ellipse(planets[i][0]/10-x+750,planets[i][1]/10-y+520,150,150)
       }
       fill("white")
       triangle(500, 350, 20+500, 350,10+500, 350-20)
@@ -92,7 +92,7 @@
       x+=xspeed
       y+=yspeed
       for (let i in planets){
-        if (Math.abs(dist(x,y,planets[i][0],planets[i][1]))<120){
+        if (Math.abs(dist(x,y,planets[i][0]/10+250,planets[i][1]/10+220))<120){
           var opts = {
         username:username,
         coordinates:JSON.stringify([planets[i][0],planets[i][1]]),
